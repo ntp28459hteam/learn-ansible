@@ -1,0 +1,176 @@
+# https://gist.github.com/rbq/886587980894e98b23d0eee2a1d84933
+- name: Install docker, docker compose and install images
+  hosts: nodemysql
+  tasks:
+  - name: Install prerequisites for Docker repository
+    apt:
+      name: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg2', 'software-properties-common']
+      update_cache: yes
+    become: yes
+
+  - name: Add Docker GPG key
+    apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+    become: yes
+    
+  - name: Add Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+    become: yes
+
+  - name: Install Docker CE
+    apt:
+      name: ['docker-ce=5:19.03.12~3-0~ubuntu-xenial', 'docker-ce-cli=5:19.03.12~3-0~ubuntu-xenial', 'containerd.io']
+      update_cache: yes
+    become: yes
+
+  - name: Install prerequisites for docker-compose
+    apt:
+      name: ['python3-pip', 'python3-setuptools', 'virtualenv']
+    become: yes
+
+  - name: install the package, force upgrade
+    pip: 
+      name: pip
+      extra_args: --upgrade
+      state: latest
+    
+  # - name: Install docker-compose
+  #   pip:
+  #     name: docker-compose
+  #   become: yes
+
+# # sudo groupadd docker
+#   - name: Create "docker" group
+#     group:
+#       name: "{{ docker_group }}"
+#       state: present
+#     tags:
+#       - docker
+#     become: true
+ 
+# # sudo usermod -aG docker ubuntu
+#   - name: Add remote "ubuntu" user to "docker" group
+#     user:
+#       name: "{{ remote_user }}"
+#       group: "{{ docker_group }}"
+#       append: yes
+#     tags:
+#       - docker
+#     become: true
+
+#   - name: run the service defined in my_project's docker-compose.yml
+#     docker_compose:
+#       project_src: /home/namtp12/docker-image-mysql-code/
+#     become: true
+
+
+  - name: Pull images
+    docker_image:
+      name: 'mysql:8.0.19'
+      source: pull
+    become: true
+
+  - name: 'run mysql container'
+    docker_container:
+      image: 'mysql:8.0.19'
+      name: 'database'
+      ports:
+      - '3306:3306'
+      command: 'mysqld --default-authentication-plugin=mysql_native_password'
+      restart_policy: 'always'
+      recreate: 'yes'
+      volumes:
+      - 'mysql_data:/var/lib/mysql'
+      env:
+        MYSQL_ROOT_PASSWORD: 'somewordpress'
+        MYSQL_DATABASE: 'wordpress'
+        MYSQL_USER: 'wordpress'
+        MYSQL_PASSWORD: 'wordpress'
+    become: true
+
+# WORDPRESS HOST
+- name: Install docker, docker compose and install images
+  hosts: nodewordpress
+  tasks:
+  - name: Install prerequisites for Docker repository
+    apt:
+      name: ['apt-transport-https', 'ca-certificates', 'curl', 'gnupg2', 'software-properties-common']
+      update_cache: yes
+    become: yes
+
+  - name: Add Docker GPG key
+    apt_key: url=https://download.docker.com/linux/ubuntu/gpg
+    become: yes
+    
+  - name: Add Docker APT repository
+    apt_repository:
+      repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+    become: yes
+
+  - name: Install Docker CE
+    apt:
+      name: ['docker-ce=5:19.03.12~3-0~ubuntu-xenial', 'docker-ce-cli=5:19.03.12~3-0~ubuntu-xenial', 'containerd.io']
+      update_cache: yes
+    become: yes
+
+  - name: Install prerequisites for docker-compose
+    apt:
+      name: ['python3-pip', 'python3-setuptools', 'virtualenv']
+    become: yes
+
+  - name: install the package, force upgrade
+    pip: 
+      name: pip
+      extra_args: --upgrade
+      state: latest
+    
+  # - name: Install docker-compose
+  #   pip:
+  #     name: docker-compose
+  #   become: yes
+
+# # sudo groupadd docker
+#   - name: Create "docker" group
+#     group:
+#       name: "{{ docker_group }}"
+#       state: present
+#     tags:
+#       - docker
+#     become: true
+  
+# # sudo usermod -aG docker ubuntu
+#   - name: Add remote "ubuntu" user to "docker" group
+#     user:
+#       name: "{{ remote_user }}"
+#       group: "{{ docker_group }}"
+#       append: yes
+#     tags:
+#       - docker
+#     become: true
+
+#   - name: run the service defined in my_project's docker-compose.yml
+#     docker_compose:
+#       project_src: /home/namtp12/docker-image-mysql-code/
+#     become: true
+
+
+  - name: 'pull wordpress image'
+    docker_image:
+      name: 'wordpress:5.4.2'
+      source: 'pull'
+    become: true
+
+  - name: 'run wordpress container'
+    docker_container:
+      image: 'wordpress:5.4.2'
+      name: 'web'
+      ports:
+      - '80:80'
+      restart_policy: 'always'
+      recreate: 'yes'
+      env:
+        WORDPRESS_DB_HOST: '10.0.2.6:3306'
+        WORDPRESS_DB_NAME: 'wordpress'
+        WORDPRESS_DB_USER: 'wordpress'
+        WORDPRESS_DB_PASSWORD: 'wordpress'
+    become: true

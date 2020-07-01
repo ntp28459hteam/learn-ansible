@@ -1,0 +1,4 @@
+[nodemysql]
+10.0.2.6 ansible_host=127.0.0.1 ansible_port=3022 ansible_ssh_user=ntp28459hteam ansible_ssh_pass=123456 ansible_become_pass=123456
+[nodewordpress]
+10.0.2.5 ansible_host=127.0.0.1 ansible_port=4022 ansible_ssh_user=ntp28459hteam ansible_ssh_pass=123456 ansible_become_pass=123456
